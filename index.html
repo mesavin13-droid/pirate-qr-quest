@@ -148,7 +148,7 @@ body.winter .av{background-position:50% 2px}
 </head>
 <body>
 <div id="app"></div><div id="nav" class="noprint"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="./jsQR.js"></script>
 
 <script>
 var LV=[
@@ -286,7 +286,7 @@ function scanErr(e){
  else if(e&&e.name==="NotAllowedError")message="Разреши доступ к камере в настройках браузера и попробуй снова.";
  else if(e&&e.name==="NotSupportedError")message="В этом окне камера недоступна. Открой сайт в Safari или Chrome.";
  else if(e&&e.name==="NotFoundError")message="Камера на устройстве не найдена.";
- if(x)x.innerHTML=esc(message)+".<br><button class='btn alt' onclick='openFull()'>🔓 Открыть в браузере</button><small>"+esc(e&&e.name?e.name:"")+"</small>";
+ if(x)x.innerHTML=esc(message)+".<br><button class='btn alt' onclick='openFull()'>🔓 Открыть в браузере</button><small>"+esc((e&&e.name?e.name:"")+(e&&e.message?": "+e.message:""))+"</small>";
  if(vv)vv.style.display="none";
 }
 function tick(){
