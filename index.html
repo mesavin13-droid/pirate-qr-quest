@@ -239,23 +239,32 @@ function found(n){stopScan();if(n==step+1){note="";view="task";render();playTask
 function done(){step++;save();note="";confetti();if(step>=N){view="home";render();sayWin()}else{view="win";render();play("praise","Молодец! Забери деталь рядом с кодом!")}}
 function ensureQRDecoder(){
  return new Promise(function(resolve,reject){
-  if(typeof window.jsQR==="function"){resolve(window.jsQR);return}
-  var urls=["https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js","https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"],index=0;
+  try{if(typeof window.jsQR==="function"){resolve(window.jsQR);return}}catch(e){}
+  var urls=["./jsQR.js","https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js","https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"],index=0;
   function attempt(){
-   if(index>=urls.length){var err=new Error("QR_DECODER_UNAVAILABLE");err.name="QRDecoderUnavailable";reject(err);return}
+   if(index>=urls.length){var err=new Error("QR-библиотека недоступна (jsQR not loaded)");err.name="QRDecoderUnavailable";reject(err);return}
    var tag=document.createElement("script");tag.src=urls[index++];tag.async=true;
-   tag.onload=function(){if(typeof window.jsQR==="function")resolve(window.jsQR);else attempt()};
-   tag.onerror=attempt;document.head.appendChild(tag);
+   tag.onload=function(){try{if(typeof window.jsQR==="function"){resolve(window.jsQR);return}}catch(e){}attempt()};
+   tag.onerror=function(){attempt()};
+   try{document.head.appendChild(tag)}catch(e){attempt()}
   }
   attempt();
- });
-}
+ });}
 function startScan(){
- view="scan";render();var v=document.getElementById("v");
- ensureQRDecoder().then(function(){
-  if(!navigator.mediaDevices||typeof navigator.mediaDevices.getUserMedia!=="function"){var e=new Error("CAMERA_UNAVAILABLE");e.name="NotSupportedError";throw e}
-  return navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
- }).then(function(s){stream=s;v.srcObject=s;return v.play()}).then(tick).catch(scanErr);
+ try{
+  view="scan";render();
+  var v=document.getElementById("v");
+  if(!v)throw new Error("Не найден video-элемент сканера (#v).");
+  if(!window.navigator||!window.navigator.mediaDevices||typeof window.navigator.mediaDevices.getUserMedia!=="function"){
+   var unsupported=new Error("Браузер не предоставляет navigator.mediaDevices.getUserMedia. Открой страницу в Safari/Chrome по HTTPS.");
+   unsupported.name="NotSupportedError";throw unsupported;
+  }
+  ensureQRDecoder().then(function(){
+   return window.navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+  }).then(function(s){
+   stream=s;v.muted=true;v.playsInline=true;v.srcObject=s;return v.play();
+  }).then(function(){tick()}).catch(function(e){scanErr(e)});
+ }catch(e){scanErr(e)}
 }
 function decodeImg(im){
  var decoder=window.jsQR;if(typeof decoder!=="function")throw new Error("QR_DECODER_UNAVAILABLE");
@@ -281,27 +290,48 @@ function snapQR(inp){
 }
 function openFull(){var w=null;try{w=window.open(location.href,"_blank")}catch(e){}if(!w){try{window.top.location.href=location.href}catch(e){var x=document.getElementById("err");if(x)x.innerHTML+="<br>Не удалось открыть."}}}
 function scanErr(e){
- stopScan();var x=document.getElementById("err"),vv=document.getElementById("v"),message="Камера не открылась";
- if(e&&((e.name==="ReferenceError")||e.name==="QRDecoderUnavailable"||e.message==="QR_DECODER_UNAVAILABLE"))message="Не загрузился сканер QR-кодов. Проверь интернет и попробуй снова.";
- else if(e&&e.name==="NotAllowedError")message="Разреши доступ к камере в настройках браузера и попробуй снова.";
- else if(e&&e.name==="NotSupportedError")message="В этом окне камера недоступна. Открой сайт в Safari или Chrome.";
- else if(e&&e.name==="NotFoundError")message="Камера на устройстве не найдена.";
- if(x)x.innerHTML=esc(message)+".<br><button class='btn alt' onclick='openFull()'>🔓 Открыть в браузере</button><small>"+esc((e&&e.name?e.name:"")+(e&&e.message?": "+e.message:""))+"</small>";
- if(vv)vv.style.display="none";
+ try{stopScan()}catch(stopError){}
+ var x=document.getElementById("err"),vv=document.getElementById("v"),message="Камера не открылась";
+ if(e&&((e.name==="QRDecoderUnavailable")||e.message==="QR_DECODER_UNAVAILABLE"||(e.message&&/jsQR|QR.библиотек/i.test(e.message)))){
+  message="Не загрузился сканер QR-кодов. Проверь подключение и попробуй снова.";
+ }else if(e&&e.name==="NotAllowedError"){
+  message="Браузер не получил разрешение на камеру. Разреши доступ к камере в настройках сайта.";
+ }else if(e&&e.name==="NotSupportedError"){
+  message="Камера недоступна в этом окне. Открой ссылку в Safari или Chrome и проверь, что адрес начинается с HTTPS.";
+ }else if(e&&e.name==="NotFoundError"){
+  message="На устройстве не найдена доступная камера.";
+ }else if(e&&e.name==="NotReadableError"){
+  message="Камера занята другим приложением. Закрой его и попробуй снова.";
+ }else if(e&&e.name==="ReferenceError"){
+  message="Ошибка JavaScript при запуске сканера.";
+ }
+ var detail=e?((e.name||"Error")+(e.message?": "+e.message:"")):"";
+ if(x)x.innerHTML=esc(message)+"<br><small>"+esc(detail)+"</small><br><button class='btn alt' onclick='openFull()'>🔓 Открыть в браузере</button>";
+ if(vv){try{vv.pause()}catch(ignore){}vv.style.display="none"}
 }
 function tick(){
- var v=document.getElementById("v"),c=document.getElementById("cv");if(!v||!c)return;
+ var v=document.getElementById("v"),c=document.getElementById("cv");
+ if(!v||!c){scanErr(new Error("Не найдены элементы видео или canvas сканера."));return}
  try{
   if(v.readyState>=2&&v.videoWidth){
-   c.width=v.videoWidth;c.height=v.videoHeight;var x=c.getContext("2d");x.drawImage(v,0,0);var d=x.getImageData(0,0,c.width,c.height),decoder=window.jsQR;
+   c.width=v.videoWidth;c.height=v.videoHeight;
+   var x=c.getContext("2d");x.drawImage(v,0,0);var d=x.getImageData(0,0,c.width,c.height);
+   var decoder=window.jsQR;
    if(typeof decoder!=="function")throw new Error("QR_DECODER_UNAVAILABLE");
-   var r=decoder(d.data,d.width,d.height);
+   var r=decoder(d.data,d.width,d.height,{inversionAttempts:"attemptBoth"});
    if(r){var m=new RegExp("^"+QD[Q].qr+"(\\d+)$").exec(r.data);if(m){found(+m[1]);return}}
   }
-  raf=requestAnimationFrame(tick);
+  if(typeof window.requestAnimationFrame==="function")raf=window.requestAnimationFrame(tick);
+  else if(typeof window.setTimeout==="function")raf=window.setTimeout(tick,120);
+  else throw new Error("В браузере отсутствует механизм обновления кадра.");
  }catch(e){scanErr(e)}
 }
-function stopScan(){cancelAnimationFrame(raf);if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}}
+function stopScan(){
+ try{if(raf){if(typeof window.cancelAnimationFrame==="function")window.cancelAnimationFrame(raf);else if(typeof window.clearTimeout==="function")window.clearTimeout(raf)}}catch(e){}
+ raf=0;
+ if(stream){try{stream.getTracks().forEach(function(t){try{t.stop()}catch(e){}})}catch(e){}stream=null}
+ var v=document.getElementById("v");if(v){try{v.pause();v.srcObject=null}catch(e){}}
+}
 var HLV=[
  {p:"🛋️",pn:"диван",e:"👻",t:"Пройди как привидение на цыпочках, тихо-тихо. Бу!",part:"верх слева"},
  {p:"🧊",pn:"холодильник",e:"🍊",t:"Найди что-нибудь оранжевое и покажи тыковке!",part:"верх справа"},
