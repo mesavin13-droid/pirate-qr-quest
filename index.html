@@ -205,7 +205,7 @@ function hdr(){if(view=="home")return "";return '<div class="bar noprint">'+(vie
 var V={
  home:function(){
   if(step>=N)return qsw()+'<div class="hero"><div class="ttl">Ура!</div>'+robot(N)+'</div><h1>'+QD[Q].win+'</h1><p>Ты собрал все 5 деталей! Приклей их по номерам на лист и раскрась робота Бипика.</p><div class="card"><div class="big">🎁</div>'+(PH[N]?'<img class="ph" src="'+PH[N]+'" alt="Приз">':'')+'<p>'+esc(finalText())+'</p></div><button class="btn" onclick="sayWin()">🔊 Послушать</button><button class="btn small" onclick="go(\'home\',reset)">Играть заново</button>';
-  return qsw()+(note?'<div class="note pop">'+esc(note)+'</div>':'')+'<div class="hero"><div class="ttl">'+esc(QD[Q].t=== "Бипик" ? "Робот Бипик" : QD[Q].t)+'</div><div class="sub">Слава и Денис, помогите собрать меня по деталям!</div>'+robot(step)+stars()+'<div class="robot-mission"><span>🤖 Бипик</span><span>·</span><span>🔎 Найди QR</span><span>·</span><span>🧩 Собери 5 деталей</span></div></div><div class="card">'+hintHtml()+'</div>'
+  return qsw()+(note?'<div class="note pop">'+esc(note)+'</div>':'')+'<div class="hero"><div class="ttl">'+esc(QD[Q].t==="Бипик"?"Робот Бипик":QD[Q].t)+'</div><div class="sub">Слава и Денис, помогите собрать меня по деталям!</div>'+robot(step)+stars()+'<div class="robot-mission"><span>🤖 Бипик</span><span>·</span><span>🔎 Найди QR</span><span>·</span><span>🧩 Собери 5 деталей</span></div></div><div class="card">'+hintHtml()+'</div>'
    +'<button class="btn go" onclick="startScan()">📷 Сканировать</button>'
    +'<button class="btn alt" onclick="sayHint()">🔊 Послушать</button>'
    +''
@@ -261,20 +261,26 @@ function decodeImg(im){
  }
  return null;
 }
-function snapQR(inp){var f=inp.files&&inp.files[0];if(!f)return;var im=new Image(),u=URL.createObjectURL(f);
- function bad(){var e=document.getElementById("err");if(e)e.innerHTML="Не вижу код. Подойди ближе и сфотографируй ещё раз 📸";say("Не вижу код. Подойди ближе и сфотографируй ещё раз.")}
- im.onload=function(){var r=null;try{r=decodeImg(im)}catch(e){}URL.revokeObjectURL(u);inp.value="";
-  if(r){var m=new RegExp("^"+QD[Q].qr+"(\\d+)$").exec(r.data);if(m){stopScan();found(+m[1]);return}}bad()};
- im.onerror=bad;im.src=u}
+function snapQR(inp){
+ var f=inp.files&&inp.files[0];if(!f)return;var im=new Image(),u=URL.createObjectURL(f);
+ function bad(){var e=document.getElementById("err");if(e)e.textContent="Не вижу QR-код. Подойди ближе и сфотографируй ещё раз 📸";say("Не вижу QR-код. Подойди ближе и сфотографируй ещё раз.")}
+ im.onload=function(){
+  ensureQRDecoder().then(function(){
+   var r=null;try{r=decodeImg(im)}catch(e){}
+   URL.revokeObjectURL(u);inp.value="";
+   if(r){var m=new RegExp("^"+QD[Q].qr+"(\\d+)$").exec(r.data);if(m){stopScan();found(+m[1]);return}}
+   bad();
+  }).catch(function(){URL.revokeObjectURL(u);inp.value="";var e=document.getElementById("err");if(e)e.textContent="Не загрузился сканер QR-кодов. Проверь интернет и попробуй ещё раз."});
+ };
+ im.onerror=function(){URL.revokeObjectURL(u);bad()};im.src=u;
+}
 function openFull(){var w=null;try{w=window.open(location.href,"_blank")}catch(e){}if(!w){try{window.top.location.href=location.href}catch(e){var x=document.getElementById("err");if(x)x.innerHTML+="<br>Не удалось открыть."}}}
 function scanErr(e){
- stopScan();
- var x=document.getElementById("err"),vv=document.getElementById("v"),message="Камера не открылась";
- if(e&&((e.name==="ReferenceError")||e.name==="QRDecoderUnavailable"||e.message==="QR_DECODER_UNAVAILABLE")){
-  message="Не загрузился сканер QR-кодов. Проверь интернет и попробуй снова.";
- }else if(e&&e.name==="NotAllowedError"){message="Разреши доступ к камере в настройках браузера и попробуй снова."}
- else if(e&&e.name==="NotSupportedError"){message="В этом окне камера недоступна. Открой сайт в Safari или Chrome."}
- else if(e&&e.name==="NotFoundError"){message="Камера на устройстве не найдена."}
+ stopScan();var x=document.getElementById("err"),vv=document.getElementById("v"),message="Камера не открылась";
+ if(e&&((e.name==="ReferenceError")||e.name==="QRDecoderUnavailable"||e.message==="QR_DECODER_UNAVAILABLE"))message="Не загрузился сканер QR-кодов. Проверь интернет и попробуй снова.";
+ else if(e&&e.name==="NotAllowedError")message="Разреши доступ к камере в настройках браузера и попробуй снова.";
+ else if(e&&e.name==="NotSupportedError")message="В этом окне камера недоступна. Открой сайт в Safari или Chrome.";
+ else if(e&&e.name==="NotFoundError")message="Камера на устройстве не найдена.";
  if(x)x.innerHTML=esc(message)+".<br><button class='btn alt' onclick='openFull()'>🔓 Открыть в браузере</button><small>"+esc(e&&e.name?e.name:"")+"</small>";
  if(vv)vv.style.display="none";
 }
