@@ -176,7 +176,7 @@ try{speechSynthesis.onvoiceschanged=function(){VOICE=pickVoice()}}catch(e){}
 function setVoice(n){VN=n;VOICE=null;try{localStorage.setItem("rq_voice_"+Q,n)}catch(e){}}
 function beep(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var t=AC.currentTime;QD[Q].v.f.forEach(function(f,i){var o=AC.createOscillator(),g=AC.createGain(),s=t+i*.09;o.type=QD[Q].v.w;o.frequency.value=f;g.gain.setValueAtTime(.05,s);g.gain.exponentialRampToValueAtTime(.001,s+.08);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+.09)})}catch(e){}}
 function say(t){try{speechSynthesis.cancel();beep();var v=VOICE||(VOICE=pickVoice());String(t).split(/[.!?]+\s*/).filter(Boolean).forEach(function(s){var u=new SpeechSynthesisUtterance(s);if(v)u.voice=v;u.lang="ru-RU";u.rate=QD[Q].v.r;u.pitch=QD[Q].v.p;u.volume=1;speechSynthesis.speak(u)})}catch(e){}}
-var AUD={robot:{},hallo:{},winter:{}},AU=null;
+var AUD={robot:{}},AU=null;
 function play(k,txt){var u=(AUD[Q]||{})[k];if(!u)return say(txt);try{speechSynthesis.cancel()}catch(e){}try{if(AU)AU.pause();AU=new Audio(u);var r=AU.play();if(r&&r.catch)r.catch(function(){say(txt)})}catch(e){say(txt)}}
 function playTask(){play("task"+(step+1),LV[step].t)}
 function sayHint(){if(NM[step]||PH[step]||note)return say((note?note+" ":"")+hintSay());play("hint"+(step+1),hintSay())}
