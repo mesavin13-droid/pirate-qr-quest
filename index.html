@@ -679,8 +679,9 @@ function miniAct(key){
 function testPrizeQr(){
  var link=prizeQrUrl();
  if(!link){alert("Сначала сохраните место приза в настройках.");return}
- var w=window.open(link,"_blank","noopener,noreferrer");
- if(!w)window.location.href=link;
+ var w=null;
+ try{w=window.open(link,"_blank");if(w)w.opener=null}catch(e){}
+ if(!w)window.location.assign(link);
 }
 function celebrateReward(){
  confetti();say("Ура! Слава и Денис, вы нашли подарок! Бипик благодарит вас за помощь.");
