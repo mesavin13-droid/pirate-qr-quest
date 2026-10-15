@@ -378,7 +378,7 @@ body.hallo .quest-progress,body.winter .quest-progress{color:#233c59}
 .puzzle-cut-board .cell.prize-final-piece{isolation:isolate}
 .prize-qr-on-piece{position:absolute;right:5px;bottom:5px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:2px;background:#fff;color:#1b3754;padding:5px;border:2px solid #204b6b;border-radius:8px;box-shadow:0 2px 8px #0003;max-width:90%}
 .prize-qr-on-piece .prize-qr-code{width:120px;height:120px;background:#fff;display:flex;justify-content:center;align-items:center;overflow:hidden}
-.prize-qr-code canvas,.prize-qr-code img{display:block!important;width:100%!important;height:100%!important;max-width:100%}
+.prize-qr-code canvas{display:block!important;width:100%!important;height:100%!important;max-width:100%}.prize-qr-code img{display:none!important}.prize-qr-code table{width:100%!important;height:100%!important;border-spacing:0}
 .prize-qr-on-piece small{font:800 9px/1.1 system-ui,sans-serif;letter-spacing:.1px;text-align:center;max-width:124px}
 .prize-qr-on-piece .prize-qr-missing{font:700 10px/1.2 system-ui,sans-serif;text-align:center;padding:5px}
 .prize-print-note{font-size:14px;margin:7px 0 10px;color:var(--ink)}
@@ -597,6 +597,7 @@ function decodePrizeLocation(token){
   return new TextDecoder("utf-8",{fatal:true}).decode(bytes).slice(0,140);
  }catch(e){return ""}
 }
+function sayPrizeClue(){say("Бипик ожил! Слава и Денис, ваш подарок ждёт здесь: "+scannedPrizeLocation)}
 function prizeQrUrl(){
  var place=String(prize||"").trim();
  if(!place || place.length>90)return "";
@@ -678,7 +679,7 @@ var V={
   var p=String(scannedPrizeLocation||"").trim();
   return '<div class="hero"><div class="ttl">🎁 Секрет Бипика</div><div class="sub">Слава и Денис, робот собран! Пора за призом.</div>'+robot(N)+'</div>'+
     '<h1>Тайник найден!</h1><div class="card"><p>Ваш подарок ждёт здесь:</p><div class="reward-place">'+esc(p||"Место приза не указано")+'</div></div>'+
-    '<button class="btn go" onclick="say(\'Бипик ожил! Слава и Денис, ваш подарок ждёт здесь: '+esc(p.replace(/['\\]/g,""))+'\')">🔊 Послушать подсказку</button>'+
+    '<button class="btn go" onclick="sayPrizeClue()">🔊 Послушать подсказку</button>'+
     '<button class="btn small" onclick="go(\'home\')">Вернуться в игру</button>';
  },
  sheet:function(){return sheet()},
