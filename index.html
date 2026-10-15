@@ -375,6 +375,19 @@ body.hallo .quest-progress,body.winter .quest-progress{color:#233c59}
 
 
 
+/* Compact, unmistakable update panel: visible only in the robot quest. */
+.robot-news{margin:12px 0 14px;border:2px solid #75c9e8;border-radius:18px;padding:13px 12px;color:#253b55;background:linear-gradient(125deg,#e8f8ff,#fff3d5);box-shadow:0 3px 0 #5f9fbb35;text-align:left}
+.robot-news .robot-news-version{display:inline-block;font:800 10px/1.3 system-ui,sans-serif;background:#246c8a;color:white;border-radius:99px;padding:4px 9px;letter-spacing:.06em}
+.robot-news strong{display:block;font-size:17px;line-height:1.3;margin:7px 0 4px}
+.robot-news p{font-size:13px;line-height:1.4;margin:0 0 10px;color:#3a4b60}
+.robot-news-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.robot-news-actions button{font:800 13px/1.3 system-ui,sans-serif;min-height:46px;padding:8px 6px;background:#fff;color:#214768;border:1.5px solid #86b8d7;border-radius:12px;cursor:pointer}
+.robot-news-actions button:active{transform:scale(.98)}
+.robot-news details{margin-top:9px;font-size:13px}
+.robot-news summary{font-weight:800;cursor:pointer;padding:5px 0}
+.robot-news ol{padding-left:24px;margin:8px 0 0;line-height:1.75}
+@media print{.robot-news{display:none!important}}
+
 /* Five hands-on robot missions: visual controls for children. */
 .mini-panel{background:linear-gradient(145deg,#f0faff,#fff8df);color:#213a55;border:2px solid #b8dcec;border-radius:20px;margin:12px 0 16px;padding:14px;box-shadow:0 4px 0 #b8dcec44}
 .mini-panel h2{font-size:20px;margin:0 0 7px}
@@ -731,15 +744,33 @@ function printTickets(){
 function printQuestPages(){
  try{window.print()}catch(e){var x=document.querySelector('.print-help');if(x)x.textContent='Печать не открылась. Открой сайт в Safari и повтори.'}
 }
+function robotNews(){
+ if(Q!=="robot")return "";
+ return '<section class="robot-news noprint" aria-label="Новое в квесте Бипика">'
+  +'<span class="robot-news-version">ОБНОВЛЕНО · 15.10 · v2</span>'
+  +'<strong>🤖 Пять новых миссий и секретный QR приза</strong>'
+  +'<p>Соберите Бипика из пяти деталей. На детали № 5 напечатан QR, который покажет место подарка после сборки.</p>'
+  +'<div class="robot-news-actions">'
+  +'<button type="button" onclick="go(&quot;sheet&quot;)">🧩 Пазл с QR приза</button>'
+  +'<button type="button" onclick="go(&quot;parent&quot;)">🎁 Настроить тайник</button></div>'
+  +'<details><summary>Посмотреть все пять заданий</summary><ol>'
+  +'<li>⚡ Запустить двигатель: пять роботских шагов</li>'
+  +'<li>🌈 Починить датчик: найти три цвета</li>'
+  +'<li>🔢 Включить счётчик: сосчитать игрушки</li>'
+  +'<li>🦾 Проверить движения: хлопки и шаги</li>'
+  +'<li>💖 Активировать сердце Бипика: секретный пароль</li>'
+  +'</ol></details></section>';
+}
+
 var V={
  home:function(){
   if(step>=N){
    var finishText=Q==="robot"?"Вы нашли все пять деталей! Соберите Бипика по номерам. На пятой детали есть последний секретный QR-код. Отсканируйте его после сборки, чтобы узнать, где спрятан подарок.":"Ты собрал все 5 кусочков! Приклей их по номерам на лист и раскрась персонажа — "+QD[Q].t+".";
-   return qsw()+'<div class="hero"><div class="ttl">Ура!</div>'+robot(N)+assemblyProgress('complete')+'</div><h1>'+QD[Q].win+'</h1><p>'+finishText+'</p>'+
+   return qsw()+robotNews()+'<div class="hero"><div class="ttl">Ура!</div>'+robot(N)+assemblyProgress('complete')+'</div><h1>'+QD[Q].win+'</h1><p>'+finishText+'</p>'+
     (Q==="robot"?'<div class="card"><div class="big">🧩 🎁</div><p>Последний шаг: собери пазл и наведи обычную камеру телефона на QR на детали № 5.</p></div>':'<div class="card"><div class="big">🎁</div>'+(PH[N]?'<img class="ph" src="'+PH[N]+'" alt="Приз">':'')+'<p>'+esc(finalText())+'</p></div>')+
     '<button class="btn" onclick="sayWin()">🔊 Послушать</button><button class="btn small" onclick="go(\'home\',reset)">Играть заново</button>';
   }
-  return qsw()+(note?'<div class="note pop">'+esc(note)+'</div>':'')+'<div class="hero"><div class="ttl">'+esc(QD[Q].t==="Бипик"?"Робот Бипик":QD[Q].t)+'</div><div class="sub">Слава и Денис, помогите собрать меня по деталям!</div>'+robot(step)+assemblyProgress('home')+'<div class="robot-mission"><span>'+QD[Q].ic+' '+esc(QD[Q].t)+'</span><span>·</span><span>🔎 Найди QR</span><span>·</span><span>🧩 Собери 5 частей</span></div></div><div class="card">'+hintHtml()+'</div>'
+  return qsw()+robotNews()+(note?'<div class="note pop">'+esc(note)+'</div>':'')+'<div class="hero"><div class="ttl">'+esc(QD[Q].t==="Бипик"?"Робот Бипик":QD[Q].t)+'</div><div class="sub">Слава и Денис, помогите собрать меня по деталям!</div>'+robot(step)+assemblyProgress('home')+'<div class="robot-mission"><span>'+QD[Q].ic+' '+esc(QD[Q].t)+'</span><span>·</span><span>🔎 Найди QR</span><span>·</span><span>🧩 Собери 5 частей</span></div></div><div class="card">'+hintHtml()+'</div>'
    +'<button class="btn go" onclick="startScan()">📷 Сканировать QR № '+(step+1)+'</button>'
    +'<button class="btn alt" onclick="sayHint()">🔊 Послушать</button>'
    +''
