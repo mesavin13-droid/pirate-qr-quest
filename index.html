@@ -295,6 +295,34 @@ body.hallo .quest-progress,body.winter .quest-progress{color:#233c59}
 @media(max-width:370px){.hero .quest-robot{max-width:215px}.quest-progress{padding:9px}.quest-progress-label strong{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.quest-piece-fresh,.quest-piece-glint,.quest-progress-item.is-latest span,.reward-spark{animation:none!important}}
 @media print{.quest-progress,.reward-header,.reward-tip{display:none!important}}
+
+/* Mobile-first controls: comfortable tap targets without oversized pills. */
+@media screen {
+ #app{padding:12px 14px 122px}
+ #app h1{font-size:clamp(22px,5.5vw,28px);line-height:1.18;margin:12px 0 8px}
+ #app p{font-size:clamp(15px,4vw,17px);line-height:1.43;margin:8px 0 12px}
+ #app .btn{width:100%;max-width:380px;min-height:50px;padding:12px 16px;margin:10px auto;font-size:17px;line-height:1.3;font-weight:750;border-radius:17px;box-shadow:0 3px 0 rgba(0,0,0,.13);cursor:pointer;animation:none}
+ #app .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.13)}
+ #app .btn.small{font-size:15px;padding:10px 14px;min-height:46px}
+ #app .btn.go::after{width:26px;height:26px;font-size:21px;flex-shrink:0}
+ #app .big{font-size:72px}
+ .print-preview-tools{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:14px 12px;margin:8px 0 16px}
+ #app .print-help{font-size:13px;line-height:1.5;opacity:.83;margin:10px auto 0;max-width:350px}
+ #app .qr-print-heading h2{font-size:22px}
+ .qr-print-grid{gap:10px}
+ .qr-adventure-card{box-shadow:none}
+ .nv{padding:8px 2px 7px}
+ .nv button{font-size:11px;min-width:53px}
+ .nv button span{font-size:22px}
+ .nv .av{width:61px;height:61px}
+}
+@media screen and (max-width:370px){#app{padding-left:10px;padding-right:10px}#app .btn{font-size:16px;padding:11px 12px}.nv button{min-width:50px}}
+@media print{
+ .print-preview-tools{display:none!important}
+ .qr-print-area{margin:0!important}
+ body:has(.qr-print-area) #app>.qr-print-area{display:block!important}
+ .qr-print-area .qr-print-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
 </style>
 </head>
 <body>
@@ -319,7 +347,7 @@ function setNm(i,v){NM[i]=v.trim();try{localStorage.setItem(PX+"nm",JSON.stringi
 function save(){try{localStorage.setItem(PX+"step",step);localStorage.setItem(PX+"prize",prize)}catch(e){}}
 function savePh(){try{localStorage.setItem(PX+"ph",JSON.stringify(PH));return true}catch(e){return false}}
 function photo(i,inp){var f=inp.files&&inp.files[0];if(!f)return;var im=new Image(),u=URL.createObjectURL(f);im.onload=function(){var s=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);PH[i]=c.toDataURL("image/jpeg",.7);URL.revokeObjectURL(u);if(!savePh())alert("Не хватило памяти телефона. Снимите заново позже.");var y=window.scrollY;render();window.scrollTo(0,y)};im.src=u}
-function photoSection(){var h='<div class="noprint"><h1>1. Места для кодов</h1><p>Впишите места для QR-кодов. После задания '+QD[Q].t+' подскажет, где искать следующую деталь. Фото можно добавить по желанию.</p>';for(var i=0;i<=N;i++){h+='<div class="card"><b>'+(i<N?'Место кода '+(i+1):'Место приза 🎁')+'</b>'+(i<N?'<input value="'+esc(NM[i]||"")+'" placeholder="'+esc(LV[i].pn)+'" onchange="setNm('+i+',this.value)">':'')+(PH[i]?'<img class="ph" src="'+PH[i]+'" alt="">':'')+'<label class="btn alt" style="font-size:20px;padding:14px">📸 '+(PH[i]?'Переснять':'Снять')+'<input type="file" accept="image/*" capture="environment" hidden onchange="photo('+i+',this)"></label></div>'}return h+'</div>'}
+function photoSection(){var h='<div class="noprint"><h1>1. Места для кодов</h1><p>Впишите места для QR-кодов. После задания '+QD[Q].t+' подскажет, где искать следующую деталь. Фото можно добавить по желанию.</p>';for(var i=0;i<=N;i++){h+='<div class="card"><b>'+(i<N?'Место кода '+(i+1):'Место приза 🎁')+'</b>'+(i<N?'<input value="'+esc(NM[i]||"")+'" placeholder="'+esc(LV[i].pn)+'" onchange="setNm('+i+',this.value)">':'')+(PH[i]?'<img class="ph" src="'+PH[i]+'" alt="">':'')+'<label class="btn alt">📸 '+(PH[i]?'Переснять':'Снять')+'<input type="file" accept="image/*" capture="environment" hidden onchange="photo('+i+',this)"></label></div>'}return h+'</div>'}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 var VOICE=null,VN="",AC=null;try{VN=localStorage.getItem("rq_voice")||""}catch(e){}
 function ruVoices(){try{return speechSynthesis.getVoices().filter(function(v){return /^ru/i.test(v.lang)})}catch(e){return[]}}
@@ -393,8 +421,20 @@ function sheet(){
  var cut='<section class="sheet puzzle-sheet '+themeCls+' puzzle-cut">'+top(2,'Найди и вырежи 5 деталей','Разрежьте по пунктиру и спрячьте каждый кусочек рядом с QR-кодом того же номера.')+'<div class="puzzle-art-board puzzle-cut-board"><img src="'+art+'" alt="Пять пронумерованных фрагментов: '+name+'">'+cells(1)+'</div><div class="puzzle-foot">✂ Вырезайте точно по пунктиру. Не обрезайте номера: они помогут найти место каждой детали.</div></section>';
  return '<div class="puzzle-actions noprint"><h2>🧩 Пазл: '+q.ic+' '+q.t+'</h2><p>Два листа A4: первый — основа, второй — детали. Рисунок и сетка имеют одинаковые размеры.</p><button class="btn go" onclick="window.print()">🖨️ Напечатать пазл</button></div><div class="puzzle-print-root">'+base+cut+'</div>';
 }
-var TT={home:"Квест для Славы и Дениса",scan:"Сканер QR-кодов",task:"Задание",win:"Деталь найдена!",parent:"Подготовка квеста",sheet:"Раскраска"};
-function hdr(){if(view==="home")return "";var title=TT[view]||"Квест";if(view==="task")title="Задание · "+QD[Q].t;if(view==="parent")title="Подготовка · "+QD[Q].name;if(view==="sheet")title=Q==="robot"?"Пазл Бипика":"Раскраска · "+QD[Q].name;return '<div class="bar noprint">'+'<button class="bk" onclick="stopScan();go(\'home\')" aria-label="Назад">‹</button><b>'+title+'</b><span class="lf">🍃</span></div>'}
+var TT={home:"Квест для Славы и Дениса",scan:"Сканер QR-кодов",task:"Задание",win:"Деталь найдена!",parent:"Подготовка квеста",sheet:"Раскраска",printcodes:"Печать QR-кодов"};
+function hdr(){if(view==="home")return "";var title=TT[view]||"Квест";if(view==="task")title="Задание · "+QD[Q].t;if(view==="parent")title="Подготовка · "+QD[Q].name;if(view==="sheet")title=Q==="robot"?"Пазл Бипика":"Раскраска · "+QD[Q].name;return '<div class="bar noprint">'+'<button class="bk" onclick="stopScan();go(\''+(view==='printcodes'?'parent':'home')+'\')" aria-label="Назад">‹</button><b>'+title+'</b><span class="lf">🍃</span></div>'}
+function printTickets(){
+ var h='<div class="print-preview-tools noprint"><h1>🎟️ QR-билеты для печати</h1><p>Пять билетов для квеста «'+esc(QD[Q].t)+'». Проверь номера и нажми «Печатать».</p><button class="btn go" type="button" onclick="printQuestPages()">🖨️ Печатать билеты</button><button class="btn small" type="button" onclick="go(\'parent\')">← Вернуться к подготовке</button><p class="print-help">На iPhone можно выбрать «Печать», а в окне предпросмотра сохранить листы как PDF через «Поделиться». Если встроенный браузер не открывает печать, открой сайт в Safari.</p></div>';
+ h+='<section class="qr-print-area"><div class="qr-print-heading"><span class="qr-print-kicker">ПРИКЛЮЧЕНИЯ СЛАВЫ И ДЕНИСА</span><h2>Секретные билеты приключения</h2><p>Квест «'+esc(QD[Q].t)+'» · 5 приключений</p></div><div class="qr-print-grid">';
+  LV.forEach(function(L,i){h+='<article class="qr-adventure-card"><div class="qr-card-top"><span class="qr-card-step">МИССИЯ '+String(i+1).padStart(2,'0')+'</span><span class="qr-card-theme">'+QD[Q].ic+' '+esc(QD[Q].name)+'</span></div><div class="qr-card-main"><div class="qr-code-frame">'+qrSvg(QD[Q].qr+(i+1))+'</div><div class="qr-card-copy"><strong>Открой миссию!</strong><span>Наведи камеру на QR-код. Выполни задание и найди деталь.</span><small>ДЕТАЛЬ ПАЗЛА № '+(i+1)+'</small></div></div><div class="qr-card-foot"><span>✦ Вырежи по пунктиру</span><span>★ '+(i+1)+' / 5</span></div></article>'});
+ h+='</div><div class="qr-parent-guide"><b>Карта тайников для взрослого · хранить отдельно от билетов</b><div class="qr-parent-rows">';
+  LV.forEach(function(L,i){h+='<div><b>№ '+(i+1)+'</b><span>'+esc(pname(i))+'</span><span>'+esc(L.part)+'</span></div>'});
+ h+='</div></div></section>';
+ return h;
+}
+function printQuestPages(){
+ try{window.print()}catch(e){var x=document.querySelector('.print-help');if(x)x.textContent='Печать не открылась. Открой сайт в Safari и повтори.'}
+}
 var V={
  home:function(){
   if(step>=N){var finishText=Q==="robot"?"Ты собрал все 5 деталей! Приклей их по номерам на лист и раскрась робота Бипика.":"Ты собрал все 5 кусочков! Приклей их по номерам на лист и раскрась персонажа — "+QD[Q].t+".";return qsw()+'<div class="hero"><div class="ttl">Ура!</div>'+robot(N)+assemblyProgress('complete')+'</div><h1>'+QD[Q].win+'</h1><p>'+finishText+'</p><div class="card"><div class="big">🎁</div>'+(PH[N]?'<img class="ph" src="'+PH[N]+'" alt="Приз">':'')+'<p>'+esc(finalText())+'</p></div><button class="btn" onclick="sayWin()">🔊 Послушать</button><button class="btn small" onclick="go(\'home\',reset)">Играть заново</button>';}
@@ -411,13 +451,9 @@ var V={
    '<div class="reward-tip">🧩 Возьми бумажную деталь № '+step+' рядом с QR-кодом и вклей в поле с той же цифрой.</div>'+
    '<button class="btn go" onclick="go(\'home\')">Искать деталь № '+(step+1)+' →</button>'},
  sheet:function(){return sheet()},
+ printcodes:function(){return printTickets()},
  parent:function(){
-  var h='<h1>Подготовка квеста «'+esc(QD[Q].t)+'»</h1><p>Настрой места QR-кодов, фотографии и карточки выбранной темы.</p>'+photoSection()+'<h1>2. Печать кодов</h1><p>Распечатайте и спрячьте каждый код в своём месте, на уровне глаз ребёнка. Рядом с кодом положите бумажную деталь с тем же номером.</p><button class="btn noprint" onclick="window.print()">🖨️ Печать кодов</button><button class="btn alt noprint" onclick="go(\'sheet\')">🖍️ Раскраска на бумаге</button>';
-  h+='<section class="qr-print-area"><div class="qr-print-heading"><span class="qr-print-kicker">ПРИКЛЮЧЕНИЯ СЛАВЫ И ДЕНИСА</span><h2>Секретные билеты приключения</h2><p>Квест «'+esc(QD[Q].t)+'» · 5 приключений</p></div><div class="qr-print-grid">';
-  LV.forEach(function(L,i){h+='<article class="qr-adventure-card"><div class="qr-card-top"><span class="qr-card-step">МИССИЯ '+String(i+1).padStart(2,'0')+'</span><span class="qr-card-theme">'+QD[Q].ic+' '+esc(QD[Q].name)+'</span></div><div class="qr-card-main"><div class="qr-code-frame">'+qrSvg(QD[Q].qr+(i+1))+'</div><div class="qr-card-copy"><strong>Открой миссию!</strong><span>Наведи камеру на QR-код. Выполни задание и найди деталь.</span><small>ДЕТАЛЬ ПАЗЛА № '+(i+1)+'</small></div></div><div class="qr-card-foot"><span>✦ Вырежи по пунктиру</span><span>★ '+(i+1)+' / 5</span></div></article>'});
-  h+='</div><div class="qr-parent-guide"><b>Карта тайников для взрослого · хранить отдельно от билетов</b><div class="qr-parent-rows">';
-  LV.forEach(function(L,i){h+='<div><b>№ '+(i+1)+'</b><span>'+esc(pname(i))+'</span><span>'+esc(L.part)+'</span></div>'});
-  h+='</div></div></section>';
+  var h='<h1>Подготовка квеста «'+esc(QD[Q].t)+'»</h1><p>Настрой места QR-кодов, фотографии и карточки выбранной темы.</p>'+photoSection()+'<h1>2. Печать кодов</h1><p>Распечатайте и спрячьте каждый код в своём месте, на уровне глаз ребёнка. Рядом с кодом положите бумажную деталь с тем же номером.</p><button class="btn go noprint" onclick="go(\'printcodes\')">🎟️ Открыть QR-билеты для печати</button><button class="btn alt noprint" onclick="go(\'sheet\')">🧩 Пазл для печати</button>';
   h+=voiceCard();h+='<div class="card noprint"><p>Где приз? (подсказка в финале)</p><input id="pz" value="'+esc(prize)+'" placeholder="Например: в шкафу в спальне"></div>'
    +'<button class="btn go noprint" onclick="prize=document.getElementById(\'pz\').value;save();go(\'home\')">Сохранить</button>'
    +'<button class="btn small noprint" onclick="go(\'home\')">Назад</button>';
