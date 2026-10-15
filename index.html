@@ -374,6 +374,20 @@ body.hallo .quest-progress,body.winter .quest-progress{color:#233c59}
 @media print{#questSplash{display:none!important}}
 
 
+
+/* Five hands-on robot missions: visual controls for children. */
+.mini-panel{background:linear-gradient(145deg,#f0faff,#fff8df);color:#213a55;border:2px solid #b8dcec;border-radius:20px;margin:12px 0 16px;padding:14px;box-shadow:0 4px 0 #b8dcec44}
+.mini-panel h2{font-size:20px;margin:0 0 7px}
+.mini-panel p{font-size:15px;line-height:1.4;margin:6px 0 12px}
+.mini-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:9px}
+.mini-action{font:800 16px/1.25 system-ui,sans-serif;background:#fff;border:2px solid #7bb1d8;color:#243b53;min-width:110px;min-height:49px;padding:11px 13px;border-radius:14px;cursor:pointer;touch-action:manipulation}
+.mini-action:active{transform:scale(.98)}
+.mini-action.is-done{background:#e0f8e7;border-color:#4cab73;color:#17693e}
+.mini-progress{font:800 15px/1.4 system-ui,sans-serif;margin:11px 0 0;color:#344b63}
+.mini-success{color:#117443}
+#robot-mini-done:disabled{opacity:.42;filter:grayscale(.55);cursor:not-allowed;box-shadow:none}
+@media print{.mini-panel{display:none!important}}
+
 /* Final prize QR belongs to the printed fifth robot-puzzle piece. */
 .puzzle-cut-board .cell.prize-final-piece{isolation:isolate}
 .prize-qr-on-piece{position:absolute;right:5px;bottom:5px;z-index:8;display:flex;flex-direction:column;align-items:center;gap:2px;background:#fff;color:#1b3754;padding:5px;border:2px solid #204b6b;border-radius:8px;box-shadow:0 2px 8px #0003;max-width:90%}
@@ -384,8 +398,8 @@ body.hallo .quest-progress,body.winter .quest-progress{color:#233c59}
 .prize-print-note{font-size:14px;margin:7px 0 10px;color:var(--ink)}
 .reward-place{font-weight:900;font-size:24px;line-height:1.35;padding:18px;overflow-wrap:anywhere}
 @media print{
- .prize-qr-on-piece{border-width:.4mm;border-radius:1.5mm;right:1mm;bottom:1mm;box-shadow:none;padding:1mm}
- .prize-qr-on-piece .prize-qr-code{width:31mm!important;height:31mm!important}
+ .prize-qr-on-piece{border-width:.3mm;border-radius:1.5mm;right:1mm;bottom:1mm;box-shadow:none;padding:2mm}
+ .prize-qr-on-piece .prize-qr-code{width:38mm!important;height:38mm!important}
  .prize-qr-on-piece small{font-size:7pt;max-width:32mm}
  .prize-qr-on-piece .prize-qr-missing{font-size:7pt}
 }
@@ -611,6 +625,67 @@ function initPrizeQr(){
  try{target.replaceChildren();new QRCode(target,{text:link,width:180,height:180,colorDark:"#121b29",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M})}
  catch(e){target.textContent="Ошибка QR: обновите страницу"}
 }
+
+var MINI_A=0,MINI_B=0,MINI_FLAGS=0;
+function miniReset(){MINI_A=0;MINI_B=0;MINI_FLAGS=0}
+function miniReady(){
+ if(Q!=="robot")return true;
+ if(step===0)return MINI_A>=5;
+ if(step===1)return (MINI_FLAGS&7)===7;
+ if(step===2)return MINI_A>=4;
+ if(step===3)return MINI_A>=3&&MINI_B>=2;
+ if(step===4)return (MINI_FLAGS&7)===7;
+ return true;
+}
+function miniButton(label,key,completed){
+ return '<button type="button" class="mini-action'+(completed?' is-done':'')+'" onclick="miniAct('+key+')"'+(completed?' disabled aria-pressed="true"':' aria-pressed="false"')+'>'+label+'</button>';
+}
+function miniPanel(){
+ if(Q!=="robot"||step>=5)return "";
+ var buttons="",caption="";
+ if(step===0){
+  caption="Сделайте 5 роботских шагов и после каждого нажимайте на батарейку.";
+  buttons=miniButton("⚡ Зарядить: "+MINI_A+"/5",0,MINI_A>=5);
+ }else if(step===1){
+  caption="Найдите дома красный, синий и жёлтый предметы. Отмечайте каждый найденный цвет.";
+  buttons=miniButton("🔴 Красный",0,!!(MINI_FLAGS&1))+miniButton("🔵 Синий",1,!!(MINI_FLAGS&2))+miniButton("🟡 Жёлтый",2,!!(MINI_FLAGS&4));
+ }else if(step===2){
+  caption="Положите перед собой 4 игрушки. Считайте вслух и нажимайте на счётчик.";
+  buttons=miniButton("🔢 Посчитано: "+MINI_A+"/4",0,MINI_A>=4);
+ }else if(step===3){
+  caption="Проверьте управление роботом: три хлопка и два притопа.";
+  buttons=miniButton("👏 Хлопки: "+MINI_A+"/3",0,MINI_A>=3)+miniButton("🦶 Шаги: "+MINI_B+"/2",1,MINI_B>=2);
+ }else{
+  caption="Активируйте сердце Бипика и скажите пароль из задания.";
+  buttons=miniButton("✋ Дали пять",0,!!(MINI_FLAGS&1))+miniButton("🧸 Обняли игрушку",1,!!(MINI_FLAGS&2))+miniButton("💬 Сказали пароль",2,!!(MINI_FLAGS&4));
+ }
+ return '<section class="mini-panel" id="robot-mini"><h2>🤖 Пульт Бипика</h2><p>'+caption+'</p><div class="mini-actions">'+buttons+'</div><div class="mini-progress'+(miniReady()?' mini-success':'')+'" role="status" aria-live="polite">'+(miniReady()?'✅ Миссия выполнена! Забирайте деталь.':'⭐ Отмечайте выполненные действия на экране')+'</div></section>';
+}
+function miniAct(key){
+ if(Q!=="robot"||view!=="task"||step>=5||!Number.isInteger(key))return;
+ var prev=miniReady();
+ if(step===0&&key===0)MINI_A=Math.min(5,MINI_A+1);
+ else if(step===1&&key>=0&&key<=2)MINI_FLAGS|=(1<<key);
+ else if(step===2&&key===0)MINI_A=Math.min(4,MINI_A+1);
+ else if(step===3&&key===0)MINI_A=Math.min(3,MINI_A+1);
+ else if(step===3&&key===1)MINI_B=Math.min(2,MINI_B+1);
+ else if(step===4&&key>=0&&key<=2)MINI_FLAGS|=(1<<key);
+ var el=document.getElementById("robot-mini");
+ if(el)el.outerHTML=miniPanel();
+ var doneBtn=document.getElementById("robot-mini-done");
+ if(doneBtn)doneBtn.disabled=!miniReady();
+ if(!prev&&miniReady()){beep();say("Молодцы! Миссия выполнена. Заберите деталь номер "+(step+1)+"!")}
+}
+function testPrizeQr(){
+ var link=prizeQrUrl();
+ if(!link){alert("Сначала сохраните место приза в настройках.");return}
+ var w=window.open(link,"_blank","noopener,noreferrer");
+ if(!w)window.location.href=link;
+}
+function celebrateReward(){
+ confetti();say("Ура! Слава и Денис, вы нашли подарок! Бипик благодарит вас за помощь.");
+}
+
 function printPuzzle(){
  if(Q==="robot"&&!prizeQrUrl()){alert("Сначала укажите место приза (до 90 символов) в разделе «Родителям» и сохраните. Иначе на последней детали не будет QR-кода.");return}
  if(Q==="robot"&&typeof QRCode!=="function"){alert("Не удалось загрузить генератор QR. Обновите страницу и повторите.");return}
@@ -639,7 +714,7 @@ function sheet(){
  var top=function(n,title,sub){return '<div class="puzzle-head"><div class="puzzle-kicker">'+q.ic+' ПРИКЛЮЧЕНИЯ СЛАВЫ И ДЕНИСА <span>ЛИСТ '+n+' / 2</span></div><h2>'+title+'</h2><p>'+sub+'</p></div>'};
  var base='<section class="sheet puzzle-sheet '+themeCls+' puzzle-base">'+top(1,'Собери '+name+'!','Основа для вклеивания. Каждая деталь должна закрыть область с таким же номером.')+'<div class="puzzle-art-board puzzle-target"><div class="puzzle-empty">'+cells(0)+'</div></div>'+footer+'</section>';
  var cut='<section class="sheet puzzle-sheet '+themeCls+' puzzle-cut">'+top(2,'Найди и вырежи 5 деталей','Разрежьте по пунктиру и спрячьте каждый кусочек рядом с QR-кодом того же номера.')+'<div class="puzzle-art-board puzzle-cut-board"><img src="'+art+'" alt="Пять пронумерованных фрагментов: '+name+'">'+cells(1)+'</div><div class="puzzle-foot">✂ Вырезайте точно по пунктиру. Не обрезайте номера: они помогут найти место каждой детали.</div></section>';
- return '<div class="puzzle-actions noprint"><h2>🧩 Пазл: '+q.ic+' '+q.t+'</h2><p>Два листа A4: первый — основа, второй — детали. Рисунок и сетка имеют одинаковые размеры.</p>'+(Q==="robot"?'<p class="prize-print-note">🎁 На последней детали № 5 находится QR-код. После сборки робота откройте его камерой, чтобы узнать место приза.</p>':'')+'<button class="btn go" onclick="printPuzzle()">🖨️ Напечатать пазл</button></div><div class="puzzle-print-root">'+base+cut+'</div>';
+ return '<div class="puzzle-actions noprint"><h2>🧩 Пазл: '+q.ic+' '+q.t+'</h2><p>Два листа A4: первый — основа, второй — детали. Рисунок и сетка имеют одинаковые размеры.</p>'+(Q==="robot"?'<p class="prize-print-note">🎁 На последней детали № 5 находится QR-код. После сборки робота откройте его камерой, чтобы узнать место приза.</p>':'')+(Q==="robot"?'<button class="btn alt" type="button" onclick="testPrizeQr()">🔎 Проверить QR с призом</button>':'')+'<button class="btn go" onclick="printPuzzle()">🖨️ Напечатать пазл</button></div><div class="puzzle-print-root">'+base+cut+'</div>';
 }
 var TT={home:"Квест для Славы и Дениса",scan:"Сканер QR-кодов",task:"Задание",win:"Деталь найдена!",reward:"Где спрятан подарок?",parent:"Подготовка квеста",sheet:"Раскраска",printcodes:"Печать QR-кодов"};
 function hdr(){if(view==="home")return "";var title=TT[view]||"Квест";if(view==="task")title="Задание · "+QD[Q].t;if(view==="parent")title="Подготовка · "+QD[Q].name;if(view==="sheet")title=Q==="robot"?"Пазл Бипика":"Раскраска · "+QD[Q].name;return '<div class="bar noprint">'+'<button class="bk" onclick="stopScan();go(\''+(view==='printcodes'?'parent':'home')+'\')" aria-label="Назад">‹</button><b>'+title+'</b><span class="lf">🍃</span></div>'}
@@ -670,7 +745,7 @@ var V={
    +'<button class="btn small" onclick="go(\'parent\')">Для родителей</button>';
  },
  scan:function(){return '<h1>Покажи код 📷</h1><label class="btn small">📸 Снять код на фото<input type="file" accept="image/*" capture="environment" hidden onchange="snapQR(this)"></label><video id="v" playsinline muted></video><p id="err"></p><canvas id="cv" hidden></canvas><button class="btn alt" onclick="stopScan();go(\'home\')">Назад</button>'},
- task:function(){var L=LV[step];return '<div class="big pop">'+L.e+'</div><h1>'+(L.name?esc(L.name):'Задание')+'</h1><p>Миссия '+(step+1)+' из '+N+'</p><div class="card"><p>'+esc(L.t)+'</p></div><button class="btn alt" onclick="playTask()">🔊 Ещё раз</button><button class="btn go" onclick="done()">Готово! ✅</button>'},
+ task:function(){var L=LV[step];return '<div class="big pop">'+L.e+'</div><h1>'+(L.name?esc(L.name):'Задание')+'</h1><p>Миссия '+(step+1)+' из '+N+'</p><div class="card"><p>'+esc(L.t)+'</p></div>'+(Q==="robot"?miniPanel():"")+'<button class="btn alt" onclick="playTask()">🔊 Ещё раз</button><button class="btn go" id="robot-mini-done" onclick="done()"'+(Q==="robot"&&!miniReady()?' disabled':'')+'>Готово! ✅</button>'},
  win:function(){return '<div class="reward-header"><span class="reward-spark" aria-hidden="true">✨</span><div class="reward-eyebrow">НОВАЯ ДЕТАЛЬ</div><h1>Ура! Деталь № '+step+' найдена!</h1><p>Расположение: '+esc(LV[step-1].part)+'.</p></div>'+
    '<div class="hero hero-reward"><div class="ttl">'+esc(QD[Q].t)+'</div>'+robot(step,'jump')+assemblyProgress('win')+'</div>'+
    '<div class="reward-tip">🧩 Возьми бумажную деталь № '+step+' рядом с QR-кодом и вклей в поле с той же цифрой.</div>'+
@@ -680,6 +755,7 @@ var V={
   return '<div class="hero"><div class="ttl">🎁 Секрет Бипика</div><div class="sub">Слава и Денис, робот собран! Пора за призом.</div>'+robot(N)+'</div>'+
     '<h1>Тайник найден!</h1><div class="card"><p>Ваш подарок ждёт здесь:</p><div class="reward-place">'+esc(p||"Место приза не указано")+'</div></div>'+
     '<button class="btn go" onclick="sayPrizeClue()">🔊 Послушать подсказку</button>'+
+    '<button class="btn go" onclick="celebrateReward()">🎉 Мы нашли подарок!</button>'+
     '<button class="btn small" onclick="go(\'home\')">Вернуться в игру</button>';
  },
  sheet:function(){return sheet()},
@@ -696,10 +772,10 @@ function render(){var a=document.getElementById("app");a.innerHTML=hdr()+V[view]
 function initHintTicket(){var c=document.getElementById("hintTicketCanvas"),frame=document.getElementById("hintTicket");if(!c||!frame)return;var r=frame.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);if(!r.width||!r.height)return;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);c.style.width=r.width+"px";c.style.height=r.height+"px";var x=c.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);var g=x.createLinearGradient(0,0,r.width,r.height);g.addColorStop(0,"#e7d6a9");g.addColorStop(.5,"#c6b681");g.addColorStop(1,"#f1e4c4");x.fillStyle=g;x.fillRect(0,0,r.width,r.height);x.fillStyle="#5e5135";x.font="800 17px system-ui";x.textAlign="center";x.fillText("СОТРИ И УЗНАЙ",r.width/2,r.height/2-4);x.font="30px system-ui";x.fillText("✨",r.width/2,r.height/2+34);for(var i=0;i<75;i++){x.fillStyle=i%2?"#fff9d6aa":"#655d4388";x.beginPath();x.arc((i*43)%r.width,(i*71)%r.height,(i%3)+.5,0,Math.PI*2);x.fill()}var erased=false;function erase(e){if(erased)return;var b=c.getBoundingClientRect();x.save();x.globalCompositeOperation="destination-out";x.beginPath();x.arc(e.clientX-b.left,e.clientY-b.top,22,0,Math.PI*2);x.fill();x.restore();check()}function check(){if(erased)return;var d=x.getImageData(0,0,c.width,c.height).data,clear=0,total=0;for(var p=3;p<d.length;p+=256){total++;if(d[p]<100)clear++}if(total&&clear/total>.3){erased=true;frame.classList.add("open");c.style.opacity=".1";var label=document.getElementById("ticketInstruction");if(label)label.textContent="✅ Фото открыто! Запомни место и найди QR-код № "+(step+1)+"."}}c.onpointerdown=function(e){e.preventDefault();if(c.setPointerCapture)c.setPointerCapture(e.pointerId);erase(e)};c.onpointermove=function(e){if(e.buttons===0&&e.pointerType!=="touch")return;e.preventDefault();erase(e)};c.onpointerup=check}
 function go(v,fn){stopVoice();if(fn)fn();view=v;render();if(v=="home"&&step<N)sayHint()}
 function reset(){step=0;note="";save()}
-function found(n){stopScan();if(n==step+1){note="";view="task";render();playTask()}
+function found(n){stopScan();if(n==step+1){miniReset();note="";view="task";render();playTask()}
  else if(n<=step){note="Эта деталь уже есть!";view="home";render();say(note)}
  else{note="Рано! Сначала найди: "+pname(step);view="home";render();say(note)}}
-function done(){if(view!=="task"||step>=N)return;step++;save();note="";confetti();if(step>=N){view="home";render();sayWin()}else{view="win";render();play("praise","Молодец! Забери деталь рядом с кодом!")}}
+function done(){if(view!=="task"||step>=N)return;if(Q==="robot"&&!miniReady()){say("Выполните задание Бипика, чтобы получить деталь.");return}step++;save();note="";confetti();if(step>=N){view="home";render();sayWin()}else{view="win";render();play("praise","Молодец! Забери деталь рядом с кодом!")}}
 function ensureQRDecoder(){
  return new Promise(function(resolve,reject){
   if(typeof window.jsQR==="function"){resolve(window.jsQR);return}
