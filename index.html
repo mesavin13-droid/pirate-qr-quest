@@ -639,9 +639,33 @@ function initPrizeQr(){
  catch(e){target.textContent="Ошибка QR: обновите страницу"}
 }
 
-function miniReset(){}
-function miniReady(){return true}
-function miniPanel(){return ""}
+var missionChecks=[false,false,false];
+var missionActions={
+ robot:[
+ ["Сделали 5 роботских шагов","Сказали «БИП-БОП»","Запустили двигатель"],
+ ["Нашли красное","Нашли синее","Нашли жёлтое"],
+ ["Нашли 4 игрушки","Сосчитали вслух","Назвали число 4"],
+ ["Хлопнули 3 раза","Топнули 2 раза","Помахали руками"],
+ ["Дали друг другу пять","Обняли игрушку","Сказали секретный пароль"]
+ ],
+ hallo:[
+ ["Прошли 8 тихих шагов","Показали привидение","Сказали «Бу!»"],
+ ["Нашли 2 оранжевых предмета","Нашли чёрный предмет","Показали находки"],
+ ["Расправили руки-крылья","Взмахнули 6 раз","Облетели башню"],
+ ["Показали удивлённую рожицу","Показали страшную рожицу","Показали смешную рожицу"],
+ ["Взялись за руки","Хлопнули 3 раза","Сказали заклинание"]
+ ],
+ winter:[
+ ["Сделали 8 снеговичьих шагов","Показали походку Снежка","Помахали Снежку"],
+ ["Нашли первый белый предмет","Нашли второй белый предмет","Нашли третий белый предмет"],
+ ["Подули 3 раза","Покружились один раз","Показали метель"],
+ ["Потёрли ладошки","Посчитали до 10","Обнялись"],
+ ["Нарисовали снежинку в воздухе","Показали 5 лучиков","Сказали «СНЕЖОК, УРА!»"]
+ ]};
+function miniReset(){missionChecks=[false,false,false]}
+function miniReady(){return missionChecks.every(Boolean)}
+function miniAct(i){if(view!=="task"||step>=N||!Number.isInteger(i)||i<0||i>2)return;missionChecks[i]=!missionChecks[i];var target=document.getElementById("missionChecklist");if(target)target.outerHTML=miniPanel();var btn=document.getElementById("robot-mini-done");if(btn)btn.disabled=!miniReady();if(miniReady())say("Молодцы! Все задания выполнены. Получите деталь номер "+(step+1)+"!")}
+function miniPanel(){if(step>=N)return "";var labels=(missionActions[Q]||missionActions.robot)[step];return '<section id="missionChecklist" class="card" style="border:2px solid #90c0e6;padding:14px"><h2 style="margin:0 0 8px;font-size:22px">⭐ Проверь задания</h2><p style="font-size:16px">Выполняйте вместе и отмечайте каждое действие</p>'+labels.map(function(label,i){return '<button type="button" aria-pressed="'+missionChecks[i]+'" onclick="miniAct('+i+')" style="display:block;width:100%;min-height:52px;padding:12px;margin:8px 0;border:2px solid '+(missionChecks[i]?'#47ab75':'#94badd')+';border-radius:16px;background:'+(missionChecks[i]?'#dcf8e8':'#fff')+';color:#203653;font-size:17px;font-weight:700;text-align:left">'+(missionChecks[i]?'✅ ':'⬜ ')+esc(label)+'</button>'}).join('')+'<p role="status" style="font-size:15px">'+(miniReady()?'🎉 Отлично! Теперь можно забрать деталь.':'Выполнено: '+missionChecks.filter(Boolean).length+' из 3')+'</p></section>'}
 function testPrizeQr(){
  var link=prizeQrUrl();
  if(!link){alert("Сначала сохраните место приза в настройках.");return}
@@ -723,7 +747,7 @@ var V={
    +'<button class="btn small" onclick="go(\'parent\')">Для родителей</button>';
  },
  scan:function(){return '<h1>Покажи код 📷</h1><label class="btn small">📸 Снять код на фото<input type="file" accept="image/*" capture="environment" hidden onchange="snapQR(this)"></label><video id="v" playsinline muted></video><p id="err"></p><canvas id="cv" hidden></canvas><button class="btn alt" onclick="stopScan();go(\'home\')">Назад</button>'},
- task:function(){var L=LV[step];return '<div class="big pop">'+L.e+'</div><h1>'+(L.name?esc(L.name):'Задание')+'</h1><p>Миссия '+(step+1)+' из '+N+'</p><div class="card"><p>'+esc(L.t)+'</p></div>'+'<button class="btn alt" onclick="playTask()">🔊 Ещё раз</button><button class="btn go" id="robot-mini-done" onclick="done()">Задание выполнено! ✅</button>'},
+ task:function(){var L=LV[step];return '<div class="big pop">'+L.e+'</div><h1>'+(L.name?esc(L.name):'Задание')+'</h1><p>Миссия '+(step+1)+' из '+N+'</p><div class="card"><p>'+esc(L.t)+'</p></div>'+miniPanel()+'<button class="btn alt" onclick="playTask()">🔊 Ещё раз</button><button class="btn go" id="robot-mini-done" onclick="done()" disabled>Задание выполнено! ✅</button>'},
  win:function(){return '<div class="reward-header"><span class="reward-spark" aria-hidden="true">✨</span><div class="reward-eyebrow">НОВАЯ ДЕТАЛЬ</div><h1>Ура! Деталь № '+step+' найдена!</h1><p>Расположение: '+esc(LV[step-1].part)+'.</p></div>'+
    '<div class="hero hero-reward"><div class="ttl">'+esc(QD[Q].t)+'</div>'+robot(step,'jump')+assemblyProgress('win')+'</div>'+
    '<div class="reward-tip">🧩 Возьми бумажную деталь № '+step+' рядом с QR-кодом и вклей в поле с той же цифрой.</div>'+
@@ -740,7 +764,7 @@ var V={
  printcodes:function(){return printTickets()},
  parent:function(){
   var h='<h1>Подготовка квеста «'+esc(QD[Q].t)+'»</h1><p>Настрой места QR-кодов, фотографии и карточки выбранной темы.</p>'+photoSection()+'<h1>2. Печать кодов</h1><p>Распечатайте и спрячьте каждый код в своём месте, на уровне глаз ребёнка. Рядом с кодом положите бумажную деталь с тем же номером.</p><button class="btn go noprint" onclick="go(\'printcodes\')">🎟️ Открыть QR-билеты для печати</button><button class="btn alt noprint" onclick="go(\'sheet\')">🧩 Пазл для печати</button>';
-  h+=voiceCard();h+='<div class="card noprint"><p>🎁 Где спрятан приз? Это место зашифруется в QR-коде на детали № 5 (роботы).</p><input id="pz" maxlength="90" value="'+esc(prize)+'" placeholder="Например: в шкафу в спальне"><small>Сначала сохраните место, затем печатайте пазл. На других телефонах откроется та же подсказка.</small></div>'
+  h+=voiceCard();h+='<div class="card noprint"><p>🎁 Место приза для подсказки родителям (не печатается на пазле).</p><input id="pz" maxlength="90" value="'+esc(prize)+'" placeholder="Например: в шкафу в спальне"><small>Сначала сохраните место, затем печатайте пазл. На других телефонах откроется та же подсказка.</small></div>'
    +'<button class="btn go noprint" onclick="prize=document.getElementById(\'pz\').value;save();go(\'home\')">Сохранить</button>'
    +'<button class="btn small noprint" onclick="go(\'home\')">Назад</button>';
   return h;
@@ -753,7 +777,7 @@ function reset(){step=0;note="";save()}
 function found(n){stopScan();if(n==step+1){miniReset();note="";view="task";render();playTask()}
  else if(n<=step){note="Эта деталь уже есть!";view="home";render();say(note)}
  else{note="Рано! Сначала найди: "+pname(step);view="home";render();say(note)}}
-function done(){if(view!=="task"||step>=N)return;step++;save();note="";confetti();if(step>=N){view="home";render();sayWin()}else{view="win";render();play("praise","Молодец! Забери деталь рядом с кодом!")}}
+function done(){if(view!=="task"||step>=N||!miniReady())return;step++;save();note="";confetti();if(step>=N){view="home";render();sayWin()}else{view="win";render();play("praise","Молодец! Забери деталь рядом с кодом!")}}
 function ensureQRDecoder(){
  return new Promise(function(resolve,reject){
   if(typeof window.jsQR==="function"){resolve(window.jsQR);return}
