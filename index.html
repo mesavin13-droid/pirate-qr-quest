@@ -723,7 +723,7 @@ var V={
    +'<button class="btn small" onclick="go(\'parent\')">Для родителей</button>';
  },
  scan:function(){return '<h1>Покажи код 📷</h1><label class="btn small">📸 Снять код на фото<input type="file" accept="image/*" capture="environment" hidden onchange="snapQR(this)"></label><video id="v" playsinline muted></video><p id="err"></p><canvas id="cv" hidden></canvas><button class="btn alt" onclick="stopScan();go(\'home\')">Назад</button>'},
- task:function(){var L=LV[step];return '<div class="big pop">'+L.e+'</div><h1>'+(L.name?esc(L.name):'Задание')+'</h1><p>Миссия '+(step+1)+' из '+N+'</p><div class="card"><p>'+esc(L.t)+'</p></div>'+'<button class="btn alt" onclick="playTask()">🔊 Ещё раз</button><button class="btn go" id="robot-mini-done" onclick="done()"'>Задание выполнено! ✅</button>'},
+ task:function(){var L=LV[step];return '<div class="big pop">'+L.e+'</div><h1>'+(L.name?esc(L.name):'Задание')+'</h1><p>Миссия '+(step+1)+' из '+N+'</p><div class="card"><p>'+esc(L.t)+'</p></div>'+'<button class="btn alt" onclick="playTask()">🔊 Ещё раз</button><button class="btn go" id="robot-mini-done" onclick="done()">Задание выполнено! ✅</button>'},
  win:function(){return '<div class="reward-header"><span class="reward-spark" aria-hidden="true">✨</span><div class="reward-eyebrow">НОВАЯ ДЕТАЛЬ</div><h1>Ура! Деталь № '+step+' найдена!</h1><p>Расположение: '+esc(LV[step-1].part)+'.</p></div>'+
    '<div class="hero hero-reward"><div class="ttl">'+esc(QD[Q].t)+'</div>'+robot(step,'jump')+assemblyProgress('win')+'</div>'+
    '<div class="reward-tip">🧩 Возьми бумажную деталь № '+step+' рядом с QR-кодом и вклей в поле с той же цифрой.</div>'+
