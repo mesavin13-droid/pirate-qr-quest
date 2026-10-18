@@ -85,17 +85,21 @@
   var baseParent = V.parent;
   V.parent = function () {
     var h = baseParent();
+    h = h.replace("После пятой миссии дети увидят финальный QR-код, а не место приза.",
+      "После пятой миссии дети будут искать отдельную финальную QR-карточку. Текст и фото тайника откроются только после сканирования.");
     var localPhoto = typeof PH[N] === "string" && PH[N].indexOf("data:image/") === 0;
     var url = validPhotoUrl(prizePhotoUrl);
     var field = '<div class="card finale-photo-setup noprint">' +
-      '<h2>📷 Фотография финального тайника</h2>' +
-      '<p>Снимок, добавленный выше кнопкой «Добавить фото», уже будет виден на этом телефоне после финального QR.</p>' +
-      '<p><b>Чтобы снимок открылся на другом телефоне,</b> добавьте прямую HTTPS-ссылку на фото. Она будет записана в отдельный финальный QR.</p>' +
+      '<h2>📷 Фото места подарка</h2>' +
+      '<p>В карточке «Место приза 🎁» выше можно <b>сфотографировать тайник</b> или выбрать снимок из галереи.</p>' +
+      '<p><b>Если дети сканируют QR другим телефоном,</b> понадобится прямая HTTPS-ссылка на фото. Она записывается в финальный QR вместе с подсказкой. Загруженный с телефона снимок сам по себе никуда в интернет не отправляется.</p>' +
       '<input id="prizePhotoUrl" type="url" inputmode="url" maxlength="250" value="' +
       esc(url) + '" placeholder="https://example.com/photo.jpg" autocomplete="off">' +
       '<small>Нужна ссылка на саму картинку (JPG, PNG, WebP), а не на страницу просмотра. Ссылка должна открываться без входа в аккаунт.</small>' +
       (url ? '<img class="finale-setup-preview" src="' + esc(url) + '" alt="Проверка фото по ссылке" referrerpolicy="no-referrer">' : '') +
-      (localPhoto && !url ? '<p class="finale-local-warning">📱 Сейчас фото доступно только на устройстве, где оно было добавлено. Для второго телефона добавьте ссылку выше.</p>' : '') +
+      (url ? '<p class="finale-photo-ready">✅ QR откроет текст и фото по ссылке на другом устройстве, если фото доступно без авторизации.</p>' :
+       localPhoto ? '<p class="finale-local-warning">⚠️ Фото сохранено только в этом браузере. На другом телефоне после QR откроется <b>только текст</b>. Чтобы дети увидели фотографию, добавьте общедоступную ссылку выше.</p>' :
+       '<p class="finale-local-warning">📷 Фотография тайника ещё не добавлена. Можно завершить квест с текстовой подсказкой или добавить фото.</p>') +
       '</div>';
     return h.replace(
       '<button class="btn go noprint" onclick="savePrizeLocation(false)">',
@@ -124,6 +128,16 @@
       return;
     }
     go(openQr ? "finalqr" : "home");
+  };
+
+  // Prevent mistakenly printing a local-only photo that will be missing from another phone.
+  var originalPrintFinalQr = window.printFinalQr;
+  window.printFinalQr = function () {
+    if (typeof PH[N] === "string" && PH[N].indexOf("data:image/") === 0 &&
+        !validPhotoUrl(prizePhotoUrl)) {
+      if (!window.confirm("Фото приза загружено только в этот браузер. На другом телефоне после QR появится лишь текст подсказки. Для фото добавьте HTTPS-ссылку в разделе «Родителям». Печатать QR без фотографии для другого телефона?")) return;
+    }
+    originalPrintFinalQr();
   };
 
   // Do not expose the secret printed final QR on the child's success screen.
@@ -177,7 +191,8 @@
     '.finale-photo-setup input{width:100%;box-sizing:border-box;font-size:16px;padding:12px;min-height:48px}' +
     '.finale-photo-setup small{display:block;line-height:1.5;margin:9px 0}' +
     '.finale-setup-preview{display:block;max-width:100%;max-height:240px;object-fit:contain;margin:12px auto;border-radius:14px}' +
-    '.finale-local-warning{padding:11px;border-radius:13px;background:#fff4d8;color:#563c12}' +
+    '.finale-local-warning{padding:13px;border-radius:13px;background:#fff4d8;color:#563c12;font-weight:600;line-height:1.5}' +
+    '.finale-photo-ready{padding:12px;border-radius:13px;background:#e7f7ed;color:#165c38;font-weight:700;line-height:1.5}' +
     '.finale-qr-photo-info{font-size:14px;color:#40576a}' +
     '@keyframes finalePhotoPop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}' +
     '@media(prefers-reduced-motion:reduce){.finale-reward-photo img{animation:none}}';
