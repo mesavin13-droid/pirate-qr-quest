@@ -558,8 +558,8 @@ function play(k,txt){var u=(AUD[Q]||{})[k];if(!u)return say(txt);
 function playTask(){play("task"+(step+1),LV[step].t)}
 function sayHint(){if(NM[step]||PH[step]||note)return say((note?note+" ":"")+hintSay());play("hint"+(step+1),hintSay())}
 function sayWin(){
- var name=QD[Q].t;
- return say(name+" ожил! Молодцы, Слава и Денис! Соберите все пять деталей по номерам. Отдельный финальный куар-код откроет подсказку о том, где спрятан подарок. Найдите его и отсканируйте камерой телефона.");
+ var opening=Q==="robot"?"Бипик ожил!":Q==="hallo"?"Тыковка собрана!":"Снежок готов!";
+ return say(opening+" Молодцы, Слава и Денис! Соберите все пять деталей по номерам. Отдельный финальный куар-код откроет подсказку о том, где спрятан подарок. Найдите его и отсканируйте камерой телефона.");
 }
 function voiceCard(){return '<div class="card voice-settings noprint">'+
  '<h2>🎙️ Озвучка '+esc(QD[Q].t)+'</h2><p class="voice-note">Подберите приятный голос для ребёнка. Настройки сохраняются для каждого квеста.</p>'+
@@ -836,8 +836,20 @@ function ensureQRDecoder(){
   attempt();
  });
 }
+function openFinalQrScan(value){
+ var link;
+ try{link=new URL(String(value||""),location.href)}catch(e){return false}
+ if(link.origin!==location.origin||link.pathname!==location.pathname)return false;
+ if(!/^#quest-reward=(robot|hallo|winter)\\.[A-Za-z0-9_-]{1,800}$/.test(link.hash)&&
+    !/^#robot-reward=[A-Za-z0-9_-]{1,800}$/.test(link.hash))return false;
+ stopScan();
+ if(location.hash!==link.hash)location.hash=link.hash;
+ else if(openPrizeFromHash())render();
+ return true;
+}
 function scanCode(value,id){
  if(id!==scanSeq||!value)return false;
+ if(openFinalQrScan(value))return true;
  var m=new RegExp("^"+QD[Q].qr+"(\\d+)$").exec(String(value));
  if(!m)return false;
  found(+m[1]);return true;
@@ -878,7 +890,7 @@ function snapQR(inp){
  var f=inp.files&&inp.files[0];if(!f)return;var mode=Q;stopScan();var im=new Image(),u=URL.createObjectURL(f),finished=false;
  function cleanup(){if(finished)return;finished=true;try{URL.revokeObjectURL(u)}catch(e){}try{inp.value=""}catch(e){}}
  function bad(){cleanup();if(Q!==mode)return;var e=document.getElementById("err");if(e)e.textContent="Не вижу QR-код. Подойди ближе, чтобы код целиком попал в кадр, и попробуй ещё раз 📸";say("Не вижу QR-код. Подойди ближе и сфотографируй ещё раз.")}
- function accept(value){if(Q!==mode)return false;var m=new RegExp("^"+QD[mode].qr+"(\\d+)$").exec(String(value||""));if(!m)return false;cleanup();found(+m[1]);return true}
+ function accept(value){if(Q!==mode)return false;if(openFinalQrScan(value)){cleanup();return true}var m=new RegExp("^"+QD[mode].qr+"(\\d+)$").exec(String(value||""));if(!m)return false;cleanup();found(+m[1]);return true}
  im.onload=function(){
   var nativeTry=Promise.resolve(null);
   if("BarcodeDetector" in window){try{var d=new window.BarcodeDetector({formats:["qr_code"]});nativeTry=d.detect(im).then(function(a){return a&&a.length?a[0].rawValue:null}).catch(function(){return null})}catch(e){nativeTry=Promise.resolve(null)}}
