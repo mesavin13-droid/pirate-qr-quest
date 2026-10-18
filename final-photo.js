@@ -126,6 +126,17 @@
     go(openQr ? "finalqr" : "home");
   };
 
+  // Do not expose the secret printed final QR on the child's success screen.
+  // The QR card is prepared under "Родителям" and hidden somewhere at home.
+  var baseHome = V.home;
+  V.home = function () {
+    var html = baseHome();
+    if (step >= N) {
+      html = html.replace('<div id="prizeQrCode" class="prize-qr-code" aria-label="Финальный QR-код подарка"></div>', '');
+    }
+    return html;
+  };
+
   var baseReward = V.reward;
   V.reward = function () {
     var h = baseReward();
