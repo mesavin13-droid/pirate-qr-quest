@@ -840,7 +840,7 @@ function openFinalQrScan(value){
  var link;
  try{link=new URL(String(value||""),location.href)}catch(e){return false}
  if(link.origin!==location.origin||link.pathname!==location.pathname)return false;
- if(!/^#quest-reward=(robot|hallo|winter)\\.[A-Za-z0-9_-]{1,800}$/.test(link.hash)&&
+ if(!/^#quest-reward=(robot|hallo|winter)\.[A-Za-z0-9_-]{1,800}$/.test(link.hash)&&
     !/^#robot-reward=[A-Za-z0-9_-]{1,800}$/.test(link.hash))return false;
  stopScan();
  if(location.hash!==link.hash)location.hash=link.hash;
